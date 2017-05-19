@@ -63,7 +63,7 @@ class NRF24:
     # Registers
     CONFIG = 0x00
     EN_AA = 0x01
-    EN_RXADDR = 0x02
+    EN_RXADDR = 0x02 # originally set to 0x02 
     SETUP_AW = 0x03
     SETUP_RETR = 0x04
     RF_CH = 0x05

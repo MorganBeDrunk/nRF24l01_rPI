@@ -25,16 +25,7 @@ radio.printDetails()        #write all settings to screen
 
 radio.startListening()      #start listening for incoming payloads
 
-#*** Connecting to DB ***
-db = pymysql.connect(
-    host = "localhost",
-    user = "testuser",
-    passwd = "test123",
-    db = "SENSDB")
-
-cursor = db.cursor()
-
-#*** Incomming ***
+#*** business ***
 try:
     while True:
         akpl_buf = [1]
@@ -44,25 +35,17 @@ try:
         receivedMessage = []
         radio.read(receivedMessage, radio.getDynamicPayloadSize())
         print ("Received: {}".format (receivedMessage))
+
         string = ""
         for n in receivedMessage:
-            if (n >= 32 and n <= 126):
+            if (n >=32 and n <=126):
                 string += chr(n)
-
-#*** Business ***
+#        print (string)
+        
         if string == 'DESTINY2':
-             print (string)
-             sql = "UPDATE noget SET TOILET = TOILET + 1"
-             try:
-                 cursor.execute(sql)
-                 db.commit()
-                 time.sleep("1")
-                 print ("Succes")
-             except:
-                db.rollback()
-                db.close()
-                print ("Failure")
+            print (string)
+
         radio.writeAckPayload(1, akpl_buf, len(akpl_buf))
 except KeyboardInterrupt:
     GPIO.cleanup()
-    print ("Bye Bye !!")
+    print ("!!Bye Bye!!")
