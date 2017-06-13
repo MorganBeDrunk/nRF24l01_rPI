@@ -6,6 +6,7 @@ from lib_nrf24 import NRF24
 import spidev
 import time
 import sys
+import smtplib
 
 #*** Setup ***
 GPIO.setmode(GPIO.BCM)
@@ -25,17 +26,33 @@ radio.printDetails()        #write all settings to screen
 
 radio.startListening()      #start listening for incoming payloads
 
+#*** mail setup ***
+mail_user = 'flushandhandwash@gmail.com'
+mail_pssword = '*#DatHandWash#'
+to_add = 'seschram@gmail.com'
+from_add = mail_user
+subject = 'Python Test'
+header = 'To: ' + to_add + '\n' + 'From: ' + from_add + '\n' + 'Subject: ' + subject
+body = 'Jeg vil gerne bestille en hel masse sæbe'
+mail_text = header + '\n\n' + body
+server = smtplib.SMTP('smtp.gmail.com',587)
+
 #*** Connecting to DB ***
 db = pymysql.connect(
     host = "localhost",
     user = "testuser",
     passwd = "test123",
     db = "SENSDB")
-
 cursor = db.cursor()
-sql_toilet = "UPDATE NOGET SET TOILET = TOILET + 1"
-sql_sink = "UPDATE NOGET SET SINK = SINK + 1"
-sql_soap = "UPDATE NOGET SET SOAP = SOAP + 1"
+
+#*** variables ***
+sql_toilet = "UPDATE noget SET TOILET = TOILET + 1"
+sql_sink = "UPDATE noget SET SINK = SINK + 1"
+sql_soap = "UPDATE noget SET SOAP = SOAP - 1"
+sqlFetch = "SELECT SOAP FROM noget"
+press = 1.90
+total_vol = 1000
+
 #*** Incomming ***
 while True:
     try:
@@ -76,18 +93,32 @@ while True:
 
         elif string == 'C':
             print (string)
-            try:
-                cursor.execute(sql_soap)
-                db.commit()
-                print ("Succes")
-            except:
-                db.rollback()
-                print ("Failure")
+            total_vol = total_vol - press
+            if total_vol < 20:
+                try:
+                    cursor.execute(sql_soap)
+                    db.commit()
+                    cursor.execute(sqlFetch)
+                    result = cursor.fetchall()
+                    for row in result:
+                        SOAP = row[0]
+                        print ("SOAP=%s" % (SOAP))
+                        if SOAP < 45:
+                            print (mail_text)
+
+                            server.ehlo()
+                            server.starttls()
+                            server.login(mail_user, mail_pssword)
+                            server.sendmail(from_add, to_add, mail_text.encode("utf8"))
+                            server.close()
+                            print ('Mail sent')
+                except:
+                    db.rollback()
+                    db.close()
+                    print ('Commit failure')
 
         radio.writeAckPayload(1, akpl_buf, len(akpl_buf))
-   
     except KeyboardInterrupt:
         GPIO.cleanup()
         db.close()
         print ("Bye Bye !!")
-
