@@ -15,7 +15,7 @@ radio.setPayloadSize(32)    #package size is 32 bytes
 radio.setChannel(0x52)      #use channel 60, must match on both receiver and sender!
 
 radio.setDataRate (NRF24.BR_2MBPS) #communication speed, set to 2MBPS
-radio.setPALevel (NRF24.PA_MIN) #level set to min, higher level=longer dist=more power used
+radio.setPALevel (NRF24.PA_HIGH) #level set to min, higher level=longer dist=more power used
 radio.setAutoAck (True)     #auto send ack
 radio.enableDynamicPayloads() #enable dynamic payload size
 radio.enableAckPayload()      #send ack on payload
@@ -26,26 +26,49 @@ radio.printDetails()        #write all settings to screen
 radio.startListening()      #start listening for incoming payloads
 
 #*** business ***
+
 try:
-    while True:
-        akpl_buf = [1]
-        while not radio.available(0):
-            time.sleep(1.0/1000.0)
+        while True:
+            akpl_buf = [1]
+            while not radio.available(0):
+                time.sleep(1.0/1000.0)
 
-        receivedMessage = []
-        radio.read(receivedMessage, radio.getDynamicPayloadSize())
-        print ("Received: {}".format (receivedMessage))
+            receivedMessage = []
+            radio.read(receivedMessage, radio.getDynamicPayloadSize())
+            print ("Received: {}".format (receivedMessage))
 
-        string = ""
-        for n in receivedMessage:
-            if (n >=32 and n <=126):
-                string += chr(n)
-#        print (string)
-        
-        if string == 'DESTINY2':
-            print (string)
+            string = ""
+            for n in receivedMessage:
+                if (n >=32 and n <=126):
+                    string += chr(n)
+#            print (string)
 
-        radio.writeAckPayload(1, akpl_buf, len(akpl_buf))
+#            if string == 'A' or string == 'B' or string == 'C':
+#                if string == 'A':
+#                    print (string)
+#                    continue
+#                elif string == 'B':
+#                    print (string)
+#                    continue
+#                elif string == 'C':
+#                    print (string)
+#                    continue
+
+
+
+            if string == 'A':
+                print (string)
+                time.sleep(0.1)
+                radio.writeAckPayload(1, akpl_buf, len(akpl_buf))           
+            elif string == 'B':
+                print (string)
+                time.sleep(0.1)
+                radio.writeAckPayload(1, akpl_buf, len(akpl_buf))
+            elif string == 'C':
+                print (string)
+                radio.writeAckPayload(1, akpl_buf, len(akpl_buf))          
+
+#        radio.writeAckPayload(1, akpl_buf, len(akpl_buf))
 except KeyboardInterrupt:
     GPIO.cleanup()
     print ("!!Bye Bye!!")
